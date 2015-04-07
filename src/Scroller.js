@@ -217,6 +217,11 @@ var Scroller;
 		__scheduledZoom: 0,
 
 
+		__loadMoreHeight: null,
+		__loadMoreActivate: null,
+		__loadMoreDeactivate: null,
+		__loadMoreStart: null,
+
 
 		/*
 		---------------------------------------------------------------------------
@@ -391,6 +396,17 @@ var Scroller;
 			}
 
 			self.scrollTo(self.__scrollLeft, self.__scrollTop, true);
+
+		},
+
+		activateLoadFromBottom: function(height, activateCallback, deactivateCallback, startCallback) {
+
+			var self = this;
+
+			self.__loadMoreHeight = height;
+			self.__loadMoreActivate = activateCallback;
+			self.__loadMoreDeactivate = deactivateCallback;
+			self.__loadMoreStart = startCallback;
 
 		},
 
@@ -844,19 +860,33 @@ var Scroller;
 							if (!self.__enableScrollX && self.__refreshHeight != null) {
 
 								if (!self.__refreshActive && scrollTop <= -self.__refreshHeight) {
-
 									self.__refreshActive = true;
 									if (self.__refreshActivate) {
 										self.__refreshActivate();
 									}
 
 								} else if (self.__refreshActive && scrollTop > -self.__refreshHeight) {
-
 									self.__refreshActive = false;
 									if (self.__refreshDeactivate) {
 										self.__refreshDeactivate();
 									}
+								}
+							}
 
+							// Support load-more (only when only y is scrollable)
+							if (!self.__enableScrollX && self.__loadMoreHeight != null) {
+
+								if (!self.__loadMoreActive && scrollTop >= maxScrollTop) {
+									self.__loadMoreActive = true;
+									if (self.__loadMoreActivate) {
+										self.__loadMoreActivate();
+									}
+
+								} else if (self.__refreshActive && scrollTop < maxScrollTop) {
+									self.__loadMoreActive = false;
+									if (self.__loadMoreDeactivate) {
+										self.__loadMoreDeactivate();
+									}
 								}
 							}
 
@@ -1004,6 +1034,16 @@ var Scroller;
 
 					if (self.__refreshStart) {
 						self.__refreshStart();
+					}
+
+				} else if (self.__loadMoreActive && self.__loadMoreStart) {
+
+					// Use publish instead of scrollTo to allow scrolling to out of boundary position
+					// We don't need to normalize scrollLeft, zoomLevel, etc. here because we only y-scrolling when pull-to-refresh is enabled
+					self.__publish(self.__scrollLeft, self.__loadMoreHeight, self.__zoomLevel, true);
+
+					if (self.__loadMoreStart) {
+						self.__loadMoreStart();
 					}
 
 				} else {
