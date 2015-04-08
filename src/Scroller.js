@@ -399,6 +399,21 @@ var Scroller;
 
 		},
 
+		/**
+		 * Signalizes that pull-to-refresh is finished.
+		 */
+		finishLoadMore: function() {
+
+			var self = this;
+
+			self.__loadMoreActive = false;
+			if (self.__loadMoreDeactivate) {
+				self.__loadMoreDeactivate();
+			}
+			
+			self.scrollTo(self.__scrollLeft, self.__contentHeight + self.__loadMoreHeight, true);
+		},
+
 		activateLoadFromBottom: function(height, activateCallback, deactivateCallback, startCallback) {
 
 			var self = this;
